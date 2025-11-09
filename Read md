@@ -1,0 +1,6 @@
+# NBA Player Prop Betting AI Bot
+
+## Setup
+1. Clone the repo
+2. Create `.env` with your API keys and webhook
+3. Install dependencies:
