@@ -1,0 +1,22 @@
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+def train_model(df):
+    X = df[["pts_avg","reb_avg","ast_avg","prop_line","injury_flag"]]
+    y = df["target"]
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    model = LogisticRegression()
+    model.fit(X_scaled, y)
+    return model, scaler
+
+def predict_props(df, model, scaler):
+    X = df[["pts_avg","reb_avg","ast_avg","prop_line","injury_flag"]]
+    X_scaled = scaler.transform(X)
+    probs = model.predict_proba(X_scaled)[:,1]
+    # Reduce confidence for injured players
+    df["confidence"] = np.where(df["injury_flag"]==1, probs*0.5, probs)
+    df["prediction"] = np.where(df["confidence"]>=0.5,"Over","Under")
+    return df
