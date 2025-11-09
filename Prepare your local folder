@@ -1,0 +1,7 @@
+SportsBettingAI/
+├── main.py
+├── data_fetcher.py
+├── model.py
+├── utils.py
+├── requirements.txt
+└── .env
