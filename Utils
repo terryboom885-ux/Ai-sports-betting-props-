@@ -1,0 +1,22 @@
+import requests
+import os
+
+def filter_top_props(df, threshold, top_n):
+    filtered = df[df["confidence"]>=threshold]
+    top_props = filtered.sort_values(by="confidence", ascending=False).head(top_n)
+    return filtered, top_props
+
+def send_webhook(df):
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+    for _, row in df.iterrows():
+        payload = {
+            "player": row["player"],
+            "prop_line": row["prop_line"],
+            "prediction": row["prediction"],
+            "confidence": round(row["confidence"],2)
+        }
+        try:
+            response = requests.post(WEBHOOK_URL, json=payload)
+            print(f"Signal sent for {row['player']} -> Status {response.status_code}")
+        except Exception as e:
+            print("Webhook error:", e)
