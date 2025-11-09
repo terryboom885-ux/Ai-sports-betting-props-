@@ -1,0 +1,14 @@
+# Embedded Odds API key (already set)
+ODDS_API_KEY=9d77ad56-b2de-4231-b76e-241f30431e84
+
+# Replace the below with your keys
+BALLEDONTLIE_API_KEY=9d77ad56-b2de-4231-b76e-241f30431e84
+INJURY_API_KEY=9d77ad56-b2de-4231-b76e-241f30431e84
+
+# Webhook for sending top props
+WEBHOOK_URL=your_traderspost_webhook_url
+
+# Bot settings
+SPORT=basketball_nba
+CONFIDENCE_THRESHOLD=0.7
+TOP_N=5
