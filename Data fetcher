@@ -1,0 +1,72 @@
+import os
+import requests
+import pandas as pd
+
+# Your embedded Odds API key
+ODDS_API_KEY = "9d77ad56-b2de-4231-b76e-241f30431e84"
+BALLEDONTLIE_API_KEY = os.getenv("BALLEDONTLIE_API_KEY")
+INJURY_API_KEY = os.getenv("INJURY_API_KEY")
+
+# Fetch player stats
+def fetch_player_stats(player_name):
+    resp = requests.get(f"https://www.balldontlie.io/api/v1/players", params={"search": player_name})
+    data = resp.json()["data"]
+    if not data:
+        return None
+    player_id = data[0]["id"]
+    stats_resp = requests.get(f"https://www.balldontlie.io/api/v1/season_averages",
+                              params={"season":2024,"player_ids[]":player_id})
+    stats_data = stats_resp.json()["data"]
+    return stats_data[0] if stats_data else None
+
+# Fetch player injury status
+def fetch_player_injury(player_name):
+    # Replace this with your real injury API if available
+    return {"status": "Active"}  # Default to active if no injury API
+
+# Fetch upcoming props from Odds API
+def fetch_upcoming_props():
+    url = "https://api.the-odds-api.com/v4/sports/basketball_nba/odds/"
+    params = {
+        "apiKey": ODDS_API_KEY,
+        "regions": "us",
+        "markets": "player_points",
+        "oddsFormat": "decimal"
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    props = []
+    for game in data:
+        for bookmaker in game.get("bookmakers", []):
+            for market in bookmaker.get("markets", []):
+                if market["key"] == "player_points":
+                    for outcome in market.get("outcomes", []):
+                        props.append({
+                            "player": outcome["name"],
+                            "prop_line": outcome["point"],
+                            "odds": outcome["price"]
+                        })
+    return props
+
+# Combine stats, injury, and props
+def fetch_upcoming_props_with_stats():
+    props = fetch_upcoming_props()
+    rows = []
+    for prop in props:
+        stats = fetch_player_stats(prop["player"])
+        if stats is None:
+            continue
+        injury = fetch_player_injury(prop["player"])
+        injury_flag = 0 if injury["status"].lower() == "active" else 1
+        row = {
+            "player": prop["player"],
+            "prop_line": prop["prop_line"],
+            "odds": prop["odds"],
+            "pts_avg": stats.get("pts",0),
+            "reb_avg": stats.get("reb",0),
+            "ast_avg": stats.get("ast",0),
+            "injury_flag": injury_flag,
+            "target": 1 if stats.get("pts",0) > prop["prop_line"] else 0
+        }
+        rows.append(row)
+    return pd.DataFrame(rows)
